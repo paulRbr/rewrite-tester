@@ -28,7 +28,7 @@ describe Redirects, ' rules' do
               response = Net::HTTP.get_response(uri)
 
               response.code.should eql '301'
-              response.header['location'].should eql redirection.values.first
+              URI.unescape(response.header['location']).should eql redirection.values.first
             end
           end
 
