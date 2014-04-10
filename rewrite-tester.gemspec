@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'rewrite-tester'
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.date        = '2014-04-10'
   s.summary     = "Make HTTP request and test answers"
   s.description = "This tool was built to do full integration testing of HTTP requests"
