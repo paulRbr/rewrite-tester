@@ -1,8 +1,11 @@
 class RewriteRule
 
-  attr_accessor :possibilities, :substitution
+  attr_accessor :possibilities, :substitution, :line
 
-  def initialize(line)
+  def initialize(line, http_host = 'example.com', http_scheme = 'http://')
+    @line = line
+    @http_host = http_host
+    @http_scheme = http_scheme
     self.parse line
   end
 
@@ -15,7 +18,7 @@ class RewriteRule
 
     @regex = match_data[1]
     @possibilities = generate_possibilities @regex
-    @substitution = match_data[2].gsub(/\$[0-9]+/, '')
+    @substitution = substitute match_data[2]
     @flags = match_data[3].split(',')
 
   end
@@ -25,12 +28,12 @@ class RewriteRule
   end
 
   def redirection?
-    !@flags.nil? && @flags.include?('R=301')
+    !@flags.nil? && @flags.any?{ |flag| /^R/.match(flag) }
   end
 
   def redirects
     @possibilities.map { |possibility|
-      { possibility => @substitution}
+      { possibility => { :substitution => @substitution, :code => redirection_code(@flags) } }
     }
   end
 
@@ -50,7 +53,23 @@ class RewriteRule
 
     # Anything will be replaced by nothing
     some.map { |possibility|
-      "http://www.clicrdv.com#{possibility.gsub('(.*)', '')}"
+      "#{@http_scheme}#{@http_host}#{possibility.gsub('(.*)', '')}"
     }
+  end
+  
+  private
+  
+  def redirection_code flags
+    redirect_regex = /^R=?([0-9]{3})?$/
+    redirect_regex.match(flags.detect { |flag| redirect_regex.match(flag) })[1] || '302'
+  end
+  
+  def substitute substitute_rule
+    substitution = substitute_rule
+    substitution = "#{@http_scheme}#{@http_host}#{substitution}" if /^\//.match(substitution)
+    substitution = substitution.      
+      gsub(/\$[0-9]+/, '').
+      gsub('%{HTTP_HOST}', @http_host).
+      gsub('%{HTTP_SCHEME}', @http_scheme)
   end
 end
