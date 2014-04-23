@@ -11,17 +11,7 @@ class Redirects
       end
     end
   end
-
-  # Increments the rul reading
-  def has_next?
-    !@rules.empty?
-  end
-
-  # Returns a rule
-  def next
-    @rules.pop
-  end
-
+  
   attr_accessor :rules
 
 end

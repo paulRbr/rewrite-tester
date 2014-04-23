@@ -20,15 +20,14 @@ describe Redirects, 'rules' do
       rule.redirects.each do |redirection|
 
         describe rule.line do
-          describe "Requesting #{redirection.keys.first}" do
-            it "redirects to #{redirection.values.first[:substitution]}" do
-              uri = URI.parse(redirection.keys.first)
+          describe "Requesting #{redirection[:possibility]}" do
+            it "redirects to #{redirection[:substitution]}" do
+              uri = URI.parse(redirection[:possibility])
 
-              # Shortcut
               response = Net::HTTP.get_response(uri)
 
-              response.code.should eql redirection.values.first[:code]
-              URI.unescape(response.header['location']).should eql redirection.values.first[:substitution]
+              response.code.should eql redirection[:code]
+              URI.unescape(response.header['location']).should eql redirection[:substitution]
             end
           end
         end
