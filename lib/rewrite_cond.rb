@@ -1,7 +1,11 @@
+require 'invalid_rule'
+
 class RewriteCond 
   def initialize(line)
     @line = line
     self.parse line
+
+    raise InvalidRule.new unless valid?
   end
 
   def parse(line)
@@ -11,7 +15,11 @@ class RewriteCond
 
     @expression = match_data[1]
     @compare = match_data[2]
-    @flgas = match_data[3]
+    @flags = match_data[4]
+  end
+
+  def valid?
+    !@expression.nil? && !@compare.nil?
   end
 
 end

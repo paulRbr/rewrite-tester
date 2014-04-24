@@ -1,4 +1,5 @@
 require 'redirects'
+require 'invalid_rule'
 
 class RewriteRule
 
@@ -7,7 +8,10 @@ class RewriteRule
   def initialize(line, conditions = [])
     @line = line
     @conds = conditions
+
     self.parse line
+
+    raise InvalidRule.new unless valid?
   end
 
   # Parse an apache RewriteRule and transform it into a Ruby object

@@ -1,0 +1,2 @@
+class InvalidRule < Exception  
+end
