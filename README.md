@@ -1,7 +1,7 @@
 Rewrite Tester
 ===
 
-[![Gem Version](https://badge.fury.io/rb/rewrite-tester.svg)](http://badge.fury.io/rb/rewrite-tester) [![Build Status](https://travis-ci.org/popox/rewrite-tester.svg?branch=master)](https://travis-ci.org/popox/rewrite-tester) [![Dependency Status](https://gemnasium.com/popox/rewrite-tester.svg)](https://gemnasium.com/popox/rewrite-tester)
+[![Gem Version](https://badge.fury.io/rb/rewrite-tester.svg)](http://badge.fury.io/rb/rewrite-tester) [![Build Status](https://travis-ci.org/popox/rewrite-tester.svg?branch=master)](https://travis-ci.org/popox/rewrite-tester) [![Coverage Status](https://coveralls.io/repos/popox/rewrite-tester/badge.png)](https://coveralls.io/r/popox/rewrite-tester) [![Dependency Status](https://gemnasium.com/popox/rewrite-tester.svg)](https://gemnasium.com/popox/rewrite-tester)
 
 This tool provides Rspec integration tests to test your server's *url rewriting* capabilities given a set of Apache `RewriteRules`.
 
