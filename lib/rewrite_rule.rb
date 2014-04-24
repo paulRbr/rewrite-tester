@@ -1,5 +1,6 @@
 require 'redirects'
 require 'invalid_rule'
+require 'untestable'
 
 class RewriteRule
 
@@ -11,12 +12,13 @@ class RewriteRule
 
     self.parse line
 
+    raise Untestable.new unless @conds.empty?
     raise InvalidRule.new unless valid?
   end
 
   # Parse an apache RewriteRule and transform it into a Ruby object
   def parse(line)
-    match_data = /RewriteRule[ ]+([^ ]+)[ ]+([^ ]+)[ ]+\[([^ ]+)\](\n)?$/.match(line)
+    match_data = /RewriteRule[ ]+([^ ]+)[ ]+([^ ]+)([ ]+\[([^ ]+)\]\n?)?$/.match(line)
 
     return if match_data.nil?
 
@@ -26,12 +28,12 @@ class RewriteRule
     @substitutions = @possibilities.map do |possibility|
       ::Redirects.substitute @substitution, possibility[:substituted_data]
     end
-    @flags = match_data[3].split(',')
+    @flags = match_data[4].nil? ? nil : match_data[4].split(',')
 
   end
 
   def valid?
-    !@regex.nil? && !@substitution.nil? && !@flags.nil?
+    !@regex.nil? && !@substitution.nil?
   end
 
   def redirection?
@@ -40,12 +42,18 @@ class RewriteRule
 
   def redirects
     @substitutions.map.with_index do |substitution, i|
+      request = ::Redirects.substitute(@possibilities[i][:request_uri])
+      response = substitution.nil? ? request : substitution
       { 
-        :possibility => ::Redirects.substitute(@possibilities[i][:request_uri]),
-        :substitution => substitution, 
+        :possibility => request,
+        :substitution => response,
         :code => redirection_code(@flags)
       }
     end
+  end
+
+  def last?
+    !@flags.nil? && @flags.include?('L')
   end
 
   private
@@ -54,21 +62,31 @@ class RewriteRule
     some = []
     base = regex.gsub(/\^|\$/,'')
 
-    # Maybe will generate two possibilities, with and without
-    maybe_regex = /\(([^)^(]+?)\)\??/
-    match_data = maybe_regex.match(base)
+    capture_regex = /\(([^)^(]+?)\)\??/
+    match_data = capture_regex.match(base)
     substituted_data = []
     until match_data.nil?    
       matched = match_data[1]
       if /\.\*/.match(matched)
+        # Match anything -> Replace by a random string
         matched = matched.gsub('.*', generate_random_string(0, 8))
       elsif /\?$/.match(match_data[0])            
+        # Maybe regex -> Replace by match or by empty string
         matched = rand(2) == 0 ? matched : ''
       end
       
       base = base.gsub(match_data[0], matched)
       substituted_data << matched
-      match_data = maybe_regex.match(base) 
+      match_data = capture_regex.match(base)
+    end
+
+    any_regex = /(\.\*)/
+    match_data = any_regex.match(base)
+    until match_data.nil?
+      matched = match_data[1]
+      matched = matched.gsub('.*', generate_random_string(0, 8))
+      base = base.gsub(match_data[0], matched)
+      match_data = any_regex.match(base)
     end
     
     some << {

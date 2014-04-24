@@ -15,7 +15,7 @@ class RewriteCond
 
     @expression = match_data[1]
     @compare = match_data[2]
-    @flags = match_data[4]
+    @flags = match_data[4].nil? ? nil : match_data[4].split(',')
   end
 
   def valid?

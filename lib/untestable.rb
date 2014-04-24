@@ -1,0 +1,2 @@
+class Untestable < Exception
+end
