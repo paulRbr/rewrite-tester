@@ -1,28 +1,26 @@
+require 'redirects'
+
 class RewriteRule
 
   attr_accessor :possibilities, :substitution, :line
 
-  def initialize(line, http_host = 'example.com', http_scheme = 'http://')
+  def initialize(line, conditions = [])
     @line = line
-    @http_host = http_host
-    @http_scheme = http_scheme
+    @conds = conditions
     self.parse line
   end
 
   # Parse an apache RewriteRule and transform it into a Ruby object
   def parse(line)
-
-    match_data = /RewriteRule ([^ ]+) ([^ ]+) \[([^ ]+)\](\n)?$/.match(line)
+    match_data = /RewriteRule[ ]+([^ ]+)[ ]+([^ ]+)[ ]+\[([^ ]+)\](\n)?$/.match(line)
 
     return if match_data.nil?
-
-    me = self
 
     @regex = match_data[1]
     @possibilities = generate_possibilities @regex
     @substitution = match_data[2]
     @substitutions = @possibilities.map do |possibility|
-      me.send(:substitute, @substitution, possibility[:substituted_data])
+      ::Redirects.substitute @substitution, possibility[:substituted_data]
     end
     @flags = match_data[3].split(',')
 
@@ -37,11 +35,9 @@ class RewriteRule
   end
 
   def redirects
-    me = self
-    
     @substitutions.map.with_index do |substitution, i|
       { 
-        :possibility => me.send(:substitute, @possibilities[i][:request_uri]),
+        :possibility => ::Redirects.substitute(@possibilities[i][:request_uri]),
         :substitution => substitution, 
         :code => redirection_code(@flags)
       }
@@ -61,9 +57,9 @@ class RewriteRule
     until match_data.nil?    
       matched = match_data[1]
       if /\.\*/.match(matched)
-        matched = match_data[0].gsub('.*', generate_random_string(0, 8))
+        matched = matched.gsub('.*', generate_random_string(0, 8))
       elsif /\?$/.match(match_data[0])            
-        matched = rand(2) == 0 ? match_data[1] : ''
+        matched = rand(2) == 0 ? matched : ''
       end
       
       base = base.gsub(match_data[0], matched)
@@ -86,14 +82,5 @@ class RewriteRule
   def redirection_code flags
     redirect_regex = /^R=?([0-9]{3})?$/
     redirect_regex.match(flags.detect { |flag| redirect_regex.match(flag) })[1] || '302'
-  end
-  
-  def substitute substitute_rule, substituted_data = []
-    substitution = substitute_rule
-    substitution = "#{@http_scheme}#{@http_host}#{substitution}" unless /^https?\:\/\//.match(substitution)
-    substitution = substitution.      
-      gsub(/\$[0-9]+?/){ |m| !m.nil? && substituted_data[m[1..-1].to_i] || '' }.
-      gsub('%{HTTP_HOST}', @http_host).
-      gsub('%{HTTP_SCHEME}', @http_scheme)
   end
 end

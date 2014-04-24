@@ -10,8 +10,9 @@ end
 
 file = File.new(ENV['RULES'])
 http_host = ENV['HTTP_HOST']
+http_scheme = ENV['HTTP_SCHEME']
 
-subject = Redirects.new file, http_host
+subject = Redirects.new file
 
 describe Redirects, 'rules' do
   subject.rules.each do |rule|
